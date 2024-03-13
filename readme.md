@@ -53,6 +53,12 @@
     # указать в Pycharm ссылку на poetry executable
     # ... User ... AppData/Local/pypoetry/...
     # poetry add requests (через терминал Pycharm)
+    # poetry add -G dev pytest
+
+    # !
+    # [tool.poetry.scripts]
+    # start-tests = 'tests.test_utils:main'
+    # Команда _poetry run start-tests_ запустит main в файле _tests/test_utils.py_
 
     # корректная ссылка на описание API
     # https://github.com/hhru/api/blob/master/README.md#headhunter-api
@@ -78,9 +84,11 @@
     добавить request +
     api, request, pytest dev?
     
-    * git
-    ветки
+    * git +
+    ветки +
     
+    * тесты +
+
     * зайти в API
     запросить токен
     положить токен в переменную окружения
@@ -97,4 +105,4 @@
     * удаление из файла
     
     * завершить main
-    * тесты
+

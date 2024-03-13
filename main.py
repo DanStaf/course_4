@@ -37,14 +37,13 @@ def user_interaction():
 """
 
 
-
 def collect_user_parameters():
-    input('____\nВведите поисковый запрос для запроса вакансий: ')
-    input('Введите количество вакансий для вывода в топ N: ')
-    input('Введите ключевые слова для поиска в описании: ')
-    input('Введите диапазон зарплат: ')
+    vacancy_name = input('____\nВведите поисковый запрос для запроса вакансий: ')
+    vacancy_amount = input('Введите количество вакансий для вывода в топ N: ')
+    vacancy_keywords = input('Введите ключевые слова для поиска в описании: ')
+    vacancy_salary = input('Введите диапазон зарплат: ')
 
-    pass
+    return [vacancy_name, vacancy_amount, vacancy_keywords, vacancy_salary]
 
 
 def hh_ru_user_interface():
@@ -53,12 +52,13 @@ def hh_ru_user_interface():
 
     while True:
 
-        platform_no = int(input('____\nВыберите платформу: 1="hh", 2="Из файла JSON"'))
+        platform_no = int(input('____\nВыберите платформу: 1="hh", 2="Из файла JSON": '))
 
         if platform_no == 1:
-            collect_user_parameters()
+            user_parameters = collect_user_parameters()
+            print(user_parameters)
 
-            hh_api = HHAPI()
+            hh_api = HHAPI(user_parameters)
             result = hh_api.get_vacancies()
             print(result)
 

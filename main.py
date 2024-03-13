@@ -60,7 +60,7 @@ def hh_ru_user_interface():
 
             hh_api = HHAPI(user_parameters)
             result = hh_api.get_vacancies()
-            print(result)
+            [print(item) for item in result]
 
         elif platform_no == 2:
             pass

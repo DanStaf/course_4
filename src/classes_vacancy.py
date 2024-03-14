@@ -23,7 +23,7 @@ class Vacancy:
         self.employment = employment
 
         self.url = url
-        self.published_at = datetime.strptime(published_at, "%Y-%m-%dT%H:%M:%S+%f")
+        self.published_at = datetime.strptime(published_at, "%Y-%m-%dT%H:%M:%S%z")
         self.employer = employer
         self.address = address
 
@@ -57,7 +57,7 @@ class Vacancy:
             'experience': self.experience,
             'employment': self.employment,
             'url': self.url,
-            'published_at': self.published_at.strftime("%Y-%m-%dT%H:%M:%S+%f"),
+            'published_at': self.published_at.strftime("%Y-%m-%dT%H:%M:%S%z"),
             'employer': self.employer,
             'address': self.address
         }

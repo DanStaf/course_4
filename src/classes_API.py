@@ -3,6 +3,7 @@ import requests
 import json
 from src.classes_vacancy import Vacancy
 
+
 class AbcAPI(ABC):
 
     @abstractmethod
@@ -77,20 +78,7 @@ class HHAPI(AbcAPI):
         if response.status_code == 200:
             vacancies = response.json()['items']
 
-            with open("data/response_result.json", 'w', encoding="UTF-8") as f:
-                json.dump(vacancies, f, indent=2, ensure_ascii=False)
-
-            return [Vacancy(item['name'],
-                            item['snippet']['requirement'],
-                            item['snippet']['responsibility'],
-                            item['salary'],
-                            item['experience'],
-                            item['employment'],
-                            item['url'],
-                            item['published_at'],
-                            item['employer'],
-                            item['address']
-                            ) for item in vacancies]
+            return Vacancy.init_from_json(vacancies)
 
         else:
             print('Ошибка получения вакансий от HH.RU.')

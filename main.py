@@ -1,4 +1,6 @@
 from src.classes_API import HHAPI
+from src.classes_savers import SaverJSON
+from src.classes_vacancy import Vacancy
 
 """
 # Создание экземпляра класса для работы с API сайтов с вакансиями
@@ -49,6 +51,7 @@ def collect_user_parameters():
 def hh_ru_user_interface():
 
     print('Программа для поиска и обработки вакансий')
+    saver = SaverJSON("data/response_result.json")
 
     while True:
 
@@ -62,9 +65,15 @@ def hh_ru_user_interface():
             result = hh_api.get_vacancies()
             [print(item) for item in result]
 
+            saver.save(result)
+
         elif platform_no == 2:
-            pass
             collect_user_parameters()
+
+            vacancies = saver.load()
+            result = Vacancy.init_from_json(vacancies)
+
+            [print(item) for item in result]
 
         else:
             print("Некорректный ввод")

@@ -29,3 +29,37 @@ class Vacancy:
 
     def __repr__(self):
         return f"Vacancy: {self.name} / {self.published_at}"
+
+    @classmethod
+    def init_from_json(cls, vacancies_json):
+
+        return [Vacancy(item['name'],
+                        item['snippet']['requirement'],
+                        item['snippet']['responsibility'],
+                        item['salary'],
+                        item['experience'],
+                        item['employment'],
+                        item['url'],
+                        item['published_at'],
+                        item['employer'],
+                        item['address']
+                        ) for item in vacancies_json]
+
+    def convert_to_dict(self):
+
+        return {
+            'name': self.name,
+            'snippet': {
+                'requirement': self.requirement,
+                'responsibility': self.responsibility
+            },
+            'salary': self.salary,
+            'experience': self.experience,
+            'employment': self.employment,
+            'url': self.url,
+            'published_at': self.published_at.strftime("%Y-%m-%dT%H:%M:%S+%f"),
+            'employer': self.employer,
+            'address': self.address
+        }
+
+##################

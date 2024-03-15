@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 import requests
 import json
 from src.classes_vacancy import Vacancy
+from src.classes_aux import UserParameters
 
 
 class AbcAPI(ABC):
@@ -19,7 +20,11 @@ class HHAPI(AbcAPI):
 
     def __init__(self, user_parameters, is_token_needed=False, token_force_update=False):
         self.token = self.receive_token(is_token_needed, token_force_update)
-        self.parameters = user_parameters
+
+        self.text = user_parameters.text
+        self.per_page = user_parameters.per_page
+        self.experience = user_parameters.experience
+        self.salary = user_parameters.salary
 
     @staticmethod
     def receive_token(is_token_needed: bool, token_force_update: bool):
@@ -69,7 +74,19 @@ class HHAPI(AbcAPI):
         else:
             headers = {}
 
-        parameters = {'text': 'python'}
+        parameters = {'text': self.text,
+                      'currency': 'RUR',
+                      'order_by': 'salary_desc'
+                      }
+
+        if self.per_page:
+            parameters['per_page'] = self.per_page
+        if self.experience:
+            parameters['experience'] = self.experience
+        if self.salary:
+            parameters['salary'] = self.salary
+
+        print(parameters)
 
         url_get = 'https://api.hh.ru/vacancies'
 
@@ -81,7 +98,56 @@ class HHAPI(AbcAPI):
             return Vacancy.init_from_json(vacancies)
 
         else:
-            print('Ошибка получения вакансий от HH.RU.')
+            result = response.json()['errors']
+            print('Ошибка получения вакансий от HH.RU.', response.status_code, result)
             return None
 
-######################
+
+
+
+
+
+"""
+"vacancy_search_order": [
+{
+"id": "publication_time",
+"name": "по дате"
+},
+{
+"id": "salary_desc",
+"name": "по убыванию дохода"
+},
+{
+"id": "salary_asc",
+"name": "по возрастанию дохода"
+},
+{
+"id": "relevance",
+"name": "по соответствию"
+},
+{
+"id": "distance",
+"name": "по удалённости"
+}
+],
+
+"experience": [
+{
+"id": "noExperience",
+"name": "Нет опыта"
+},
+{
+"id": "between1And3",
+"name": "От 1 года до 3 лет"
+},
+{
+"id": "between3And6",
+"name": "От 3 до 6 лет"
+},
+{
+"id": "moreThan6",
+"name": "Более 6 лет"
+}
+],
+"""
+        ######################

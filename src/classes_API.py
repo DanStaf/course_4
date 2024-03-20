@@ -17,9 +17,18 @@ class AbcAPI(ABC):
 
 
 class HHAPI(AbcAPI):
+    """
+    Класс для работы с API сайта hh.ru
+    Параметры:
+    text - текст запроса - обязательно
+    token - опционально
+    per_page - опционально
+    experience - опционально
+    salary - опционально
+    """
 
     def __init__(self, user_parameters, is_token_needed=False, token_force_update=False):
-        self.token = self.receive_token(is_token_needed, token_force_update)
+        self.__token = self.__receive_token(is_token_needed, token_force_update)
 
         self.text = user_parameters.text
         self.per_page = user_parameters.per_page
@@ -27,52 +36,98 @@ class HHAPI(AbcAPI):
         self.salary = user_parameters.salary
 
     @staticmethod
-    def receive_token(is_token_needed: bool, token_force_update: bool):
+    def __receive_token(is_token_needed: bool, token_force_update: bool):
         """
+        ДЛЯ ЗАПРОСА ВАКАНСИЙ ТОКЕН НЕ НУЖЕН!
+        :return: None
+
+        ДЛЯ ДОПОЛНИТЕЛЬНЫХ ЗАПРОСОВ МОЖНО ИСПОЛЬЗОВАТЬ ТОКЕН
+        Запрос токена делается после подтверждения приложения на сайте hh.ru
+
         Данный access_token имеет неограниченный срок жизни.
         При повторном запросе ранее выданный токен отзывается и выдается новый.
         Запрашивать access_token можно не чаще, чем один раз в 5 минут
+        :return: (token, software_name, software_email)
         """
 
-        if is_token_needed:
-            with open('../data/API_token.json') as f:
-                data = json.loads(f.read())
+        if not is_token_needed:
+            return None
 
-            if ('HH_API_TOKEN' in data) and not token_force_update:
-                token = data['HH_API_TOKEN']
-            else:
-                if ('HH_CLIENT_ID' in data) and ('HH_CLIENT_SECRET' in data):
-                    client_id = data['HH_CLIENT_ID']
-                    client_secret = data['HH_CLIENT_SECRET']
+        # IF TOKEN IS NEEDED:
 
-                    grant_type = 'client_credentials'
-                    parameters = f"grant_type={grant_type}&client_id={client_id}&client_secret={client_secret}"
-                    url_post = "https://api.hh.ru/token"  # используемый адрес для отправки запроса
+        with open('../data/API_token.json') as f:
+            data = json.loads(f.read())
 
-                    response = requests.post(url_post, params=parameters)  # отправка POST-запроса
+        if not ('HH_SOFTWARE_NAME' in data) or not ('HH_SOFTWARE_EMAIL' in data):
+            print('Приложение не зарегистрировано на HH.RU. Продолжим без токена')
+            return None
 
-                    if response.status_code == 200:
-                        token = response.json()['access_token']
-                    else:
-                        print('Токен не получен от HH.RU. Продолжим без токена')
-                        token = None
-                else:
-                    print('Приложение не зарегистрировано на HH.RU. Продолжим без токена')
-                    token = None
+        elif ('HH_API_TOKEN' in data) and not token_force_update:
+            # HH_API_TOKEN and HH_SOFTWARE_NAME and HH_SOFTWARE_EMAIL exist:
+            return (data['HH_API_TOKEN'],
+                    data['HH_SOFTWARE_NAME'],
+                    data['HH_SOFTWARE_EMAIL'])
+
+        elif ('HH_CLIENT_ID' not in data) or  ('HH_CLIENT_SECRET' not in data):
+            # HH_API_TOKEN not exist or need to update
+            # but HH_SOFTWARE_NAME and HH_SOFTWARE_EMAIL not exist
+
+            print('Приложение не зарегистрировано на HH.RU. Продолжим без токена')
+            return None
+
         else:
-            token = None
+            # HH_API_TOKEN not exist or need to update
+            # HH_SOFTWARE_NAME and HH_SOFTWARE_EMAIL exist
 
-        return token
+            client_id = data['HH_CLIENT_ID']
+            client_secret = data['HH_CLIENT_SECRET']
 
-    def get_vacancies(self):
+            grant_type = 'client_credentials'
+            parameters = f"grant_type={grant_type}&client_id={client_id}&client_secret={client_secret}"
+            url_post = "https://api.hh.ru/token"  # используемый адрес для отправки запроса
 
-        if self.token is not None:
-            headers = {
-                'Authorization': f'Bearer {self.token}',
-                'HH-User-Agent': 'Vacancies Manager (danstaf@mail.ru)'
+            response = requests.post(url_post, params=parameters)  # отправка POST-запроса
+
+            if response.status_code == 200:
+                token = response.json()['access_token']
+                return (token,
+                        data['HH_SOFTWARE_NAME'],
+                        data['HH_SOFTWARE_EMAIL'])
+            else:
+                print('Токен не получен от HH.RU. Продолжим без токена')
+                return None
+
+    def get_token_info(self):
+
+        if self.__token is None:
+            return "Токен отсутствует"
+        else:
+            return f'Токен: {self.__token[0][:5]}...'
+
+    def __get_headers(self):
+        """
+        Если токен есть, заполняем headers
+        """
+
+        if self.__token:
+            token = self.__token[0]
+            software_name = self.__token[1]
+            software_email = self.__token[2]
+
+            return {
+                'Authorization': f'Bearer {token}',
+                'HH-User-Agent': f'{software_name} ({software_email})'
             }
         else:
-            headers = {}
+            return {}
+
+    def get_vacancies(self):
+        """
+        Метод делает запрос вакансий с сайта hh.ru по указанным параметрам
+        :return: список объектов класса Vacancy
+        """
+
+        headers = self.__get_headers()
 
         parameters = {'text': self.text,
                       'currency': 'RUR',
@@ -85,8 +140,6 @@ class HHAPI(AbcAPI):
             parameters['experience'] = self.experience
         if self.salary:
             parameters['salary'] = self.salary
-
-        print(parameters)
 
         url_get = 'https://api.hh.ru/vacancies'
 
@@ -101,7 +154,6 @@ class HHAPI(AbcAPI):
             result = response.json()['errors']
             print('Ошибка получения вакансий от HH.RU.', response.status_code, result)
             return None
-
 
 
 
@@ -150,4 +202,5 @@ class HHAPI(AbcAPI):
 }
 ],
 """
-        ######################
+
+######################

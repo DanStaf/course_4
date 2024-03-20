@@ -160,4 +160,5 @@ cython_debug/
 .idea/
 .idea
 
-data/API_token.json
+course_4/data/API_token.json
+course_4/data/
